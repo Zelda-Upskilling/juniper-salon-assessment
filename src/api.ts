@@ -1,58 +1,218 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { Client, Connection } from "@temporalio/client";
-import express, { type NextFunction, type Request, type Response } from "express";
-import type { DemoStatus } from "./types";
-import { demoWorkflow } from "./workflows";
-
+import {
+  Client as TemporalClient,
+  Connection,
+  WorkflowExecutionAlreadyStartedError,
+} from "@temporalio/client";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
+import type { Client, Command, Desk, Opening, Result } from "./types";
+import { salonDesk } from "./workflows";
+import { eligible, DEMO_NOW } from "./rules";
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(process.cwd(), "public")));
-
-let clientPromise: Promise<Client> | undefined;
-function getClient(): Promise<Client> {
-  clientPromise ??= Connection.connect({
-    address: process.env.TEMPORAL_ADDRESS ?? "localhost:7233",
-  }).then((connection) => new Client({ connection, namespace: "default" }));
-  return clientPromise;
-}
-
-app.post("/api/demo", async (_request, response) => {
-  const requestId = randomUUID();
-  const client = await getClient();
-  await client.workflow.start(demoWorkflow, {
-    workflowId: requestId,
-    taskQueue: "assessment-starter",
-    args: [requestId],
-  });
-  response.status(201).json({ requestId });
-});
-
-app.get("/api/demo/:requestId", async (request, response) => {
-  const client = await getClient();
-  const status = await client.workflow
-    .getHandle(request.params.requestId)
-    .query<DemoStatus>("getDemoStatus");
-  response.json(status);
-});
-
-app.post("/api/demo/:requestId/continue", async (request, response) => {
-  const client = await getClient();
-  await client.workflow
-    .getHandle(request.params.requestId)
-    .signal("continueDemo");
-  response.status(202).json({ accepted: true });
-});
-
-app.use(
-  (error: unknown, _request: Request, response: Response, _next: NextFunction) => {
-    console.error(error);
-    response.status(500).json({
-      error: error instanceof Error ? error.message : "Unexpected error",
+const workflowId = process.env.DESK_WORKFLOW_ID || "juniper-desk-v1";
+let connectionPromise: Promise<TemporalClient> | undefined;
+async function desk() {
+  connectionPromise ??= Connection.connect({
+    address: process.env.TEMPORAL_ADDRESS || "localhost:7233",
+  }).then(
+    (connection) => new TemporalClient({ connection, namespace: "default" }),
+  );
+  const client = await connectionPromise;
+  try {
+    await client.workflow.start(salonDesk, {
+      workflowId,
+      taskQueue: "juniper-salon",
+      args: [],
     });
-  },
+  } catch (error) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) {
+      connectionPromise = undefined;
+      throw error;
+    }
+  }
+  return client.workflow.getHandle(workflowId);
+}
+export function sampleClients(opening: Opening, scenario = "normal"): Client[] {
+  const from = new Date(Date.parse(opening.startsAt) - 3600000).toISOString();
+  const until = new Date(
+    Date.parse(opening.startsAt) + 4 * 3600000,
+  ).toISOString();
+  const base = {
+    mobile: "(555) 010-0000",
+    service: opening.service,
+    minutes: opening.minutes,
+    stylist: "Any",
+    availableFrom: from,
+    availableUntil: until,
+    consent: true,
+    delivery: "ok" as const,
+  };
+  return [
+    {
+      ...base,
+      id: "anna",
+      name: "Anna Rivera",
+      joined: 1,
+      delivery:
+        scenario === "failed" ? "fail" : scenario === "retry" ? "retry" : "ok",
+    },
+    {
+      ...base,
+      id: "mei",
+      name: "Mei Chen",
+      joined: 2,
+      stylist: opening.stylist,
+    },
+    { ...base, id: "maya", name: "Maya Brooks", joined: 3 },
+    {
+      ...base,
+      id: "jules",
+      name: "Jules Reed",
+      joined: 4,
+      stylist: "Other stylist",
+    },
+    {
+      ...base,
+      id: "noor",
+      name: "Noor Ellis",
+      joined: 5,
+      minutes: opening.minutes + 30,
+    },
+    { ...base, id: "sofia", name: "Sofia Park", joined: 6, consent: false },
+  ];
+}
+function bad(message: string): never {
+  throw Object.assign(new Error(message), { status: 400 });
+}
+const text = (v: unknown, max = 500) =>
+  typeof v === "string" && v.trim().length > 0 && v.length <= max;
+function parseCommand(body: any): Command {
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    bad("A JSON action is required.");
+  if (!text(body.requestId, 100))
+    bad("A requestId is required for safe retries.");
+  if (
+    !["start", "reply", "confirm", "release", "withdraw", "resolve"].includes(
+      body.type,
+    )
+  )
+    bad("Unknown action.");
+  if (
+    body.text !== undefined &&
+    (typeof body.text !== "string" || body.text.length > 500)
+  )
+    bad("Notes must contain at most 500 characters.");
+  const cmd: Command = {
+    requestId: body.requestId,
+    type: body.type,
+    text: body.text,
+  };
+  if (body.type === "start") {
+    const o = body.opening;
+    if (
+      !o ||
+      !["Haircut", "Color touch-up", "Blowout"].includes(o.service) ||
+      !["Lena", "Carla"].includes(o.stylist) ||
+      !Number.isInteger(o.minutes) ||
+      o.minutes < 15 ||
+      o.minutes > 180 ||
+      !["demo", "standard"].includes(o.mode) ||
+      !text(o.startsAt, 40) ||
+      !Number.isFinite(Date.parse(o.startsAt))
+    )
+      bad("Enter a valid service, stylist, duration, and appointment time.");
+    if (o.timezone !== "America/Los_Angeles")
+      bad("This prototype uses America/Los_Angeles.");
+    if (!["normal", "failed", "retry"].includes(body.scenario || "normal"))
+      bad("Unknown demonstration scenario.");
+    const opening: Opening = {
+      id: randomUUID(),
+      service: o.service,
+      stylist: o.stylist,
+      minutes: o.minutes,
+      mode: o.mode,
+      startsAt: new Date(o.startsAt).toISOString(),
+      timezone: o.timezone,
+    };
+    cmd.opening = opening;
+    cmd.clients = sampleClients(opening, body.scenario);
+  }
+  if (["reply", "confirm", "release", "resolve"].includes(body.type)) {
+    if (!text(body.offerId, 150)) bad("An offerId is required.");
+    cmd.offerId = body.offerId;
+  }
+  if (body.type === "reply") {
+    if (!["accept", "decline", "question", "stop"].includes(body.reply))
+      bad("Choose a valid client response.");
+    cmd.reply = body.reply;
+  }
+  if (body.type === "confirm")
+    cmd.squareConfirmed = body.squareConfirmed === true;
+  return cmd;
+}
+app.get("/api/health", async (_req, res) => {
+  const h = await desk();
+  await h.describe();
+  res.json({ ok: true, workflowId });
+});
+app.get("/api/desk", async (_req, res) => {
+  const handle = await desk();
+  const state = await handle.query<Desk>("getDesk");
+  res.json({
+    ...state,
+    workflowId,
+    clients: state.clients.map((c) => ({
+      ...c,
+      reason: state.opening ? eligible(c, state.opening) : null,
+    })),
+  });
+});
+app.get("/api/defaults", (_req, res) =>
+  res.json({
+    demoNow: DEMO_NOW,
+    demoAppointment: new Date(DEMO_NOW + 2 * 3600000).toISOString(),
+    timezone: "America/Los_Angeles",
+  }),
 );
-
-const port = Number(process.env.PORT ?? 3000);
-app.listen(port, () => console.log(`Starter is available at http://localhost:${port}`));
-
+app.post("/api/command", async (req, res) => {
+  const cmd = parseCommand(req.body);
+  const handle = await desk();
+  const result = await handle.executeUpdate<Result, [Command]>("command", {
+    args: [cmd],
+    updateId: cmd.requestId,
+  });
+  res.status(result.ok ? 200 : 409).json(result);
+});
+app.use("/api", (_req, res) =>
+  res.status(404).json({ ok: false, error: "API endpoint not found." }),
+);
+app.use((error: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status =
+    error.type === "entity.too.large"
+      ? 413
+      : error instanceof SyntaxError
+        ? 400
+        : error.status || 503;
+  if (status === 503) res.setHeader("Retry-After", "2");
+  res
+    .status(status)
+    .json({
+      ok: false,
+      error:
+        status === 503
+          ? "The salon service is reconnecting. Your workflow is saved; retry shortly."
+          : status === 413
+            ? "Request is too large."
+            : error.message || "Invalid request.",
+    });
+});
+app.listen(Number(process.env.PORT || 3000), "127.0.0.1", () =>
+  console.log("Juniper Salon: http://localhost:3000"),
+);

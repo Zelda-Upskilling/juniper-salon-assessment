@@ -1,4 +1,5 @@
-# Evidence
+# Assessment evidence
 
-Before submitting, replace this file or add an image in this directory showing one representative Workflow in the Temporal Web UI. The screenshot should make the Workflow ID, status, and meaningful event history visible without exposing real personal information.
+Start with `verification.md`. The required Temporal Web UI screenshot is `temporal-workflow.jpg`. Recovery proof is in `worker-recovery.json`; the customer-approved rules are preserved in `customer-interview.txt` and `customer-confirmation.jpg`.
 
+The neutral starter screenshot is setup evidence only. The final salon prototype has its own screenshot and workflow history.

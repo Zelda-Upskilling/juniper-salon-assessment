@@ -1,33 +1,230 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Temporal assessment starter</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Juniper — The opening desk</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main>
-      <p class="eyebrow">Temporal assessment starter</p>
-      <h1>Your environment is connected.</h1>
-      <p class="intro">
-        This neutral demonstration starts a Workflow, waits durably for a
-        Signal, and then completes. Replace it with the experience your
-        customer needs.
-      </p>
-      <section class="card">
-        <h2 id="phase">Ready</h2>
-        <p id="message">Start the demonstration to verify the setup.</p>
-        <button id="start">Start demo Workflow</button>
-        <button id="continue" hidden>Send continue Signal</button>
-        <p class="request-id" id="request-id"></p>
+    <aside class="sidebar">
+      <a class="brand" href="/">juniper<span>SALON & COMPANY</span></a>
+      <div class="nav">
+        <span class="nav-label">YOUR FRONT DESK</span
+        ><a href="#desk" class="nav-active">◌ &nbsp; Opening desk</a
+        ><a href="#waitlist">☷ &nbsp; Waitlist</a
+        ><a href="#history">↗ &nbsp; Activity</a>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="monogram">J</div>
+        <p>A little less chasing.<br />A little more salon time.</p>
+        <small>Local assessment prototype</small>
+      </div>
+    </aside>
+    <main id="desk">
+      <header>
+        <div>
+          <span class="eyebrow">JUNIPER / FRONT DESK</span>
+          <h1>Make room for someone.</h1>
+          <p class="subtitle">
+            A thoughtful way to fill the unexpected openings.
+          </p>
+        </div>
+        <span id="connection" class="connection">Connecting…</span>
+      </header>
+      <div class="disclosure">
+        <span>DEMONSTRATION</span> Fictional clients. Simulated texts. Square
+        bookings stay manual.
+        <a href="http://localhost:8233" target="_blank" rel="noreferrer"
+          >View Temporal ↗</a
+        >
+      </div>
+      <div id="toast" role="status" aria-live="polite" hidden></div>
+      <section class="workspace">
+        <div class="staff-column">
+          <section class="card opening-card">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">01 / THE OPENING</span>
+                <h2 id="opening-title">An empty chair, a new possibility.</h2>
+              </div>
+              <span id="phase" class="pill">Ready</span>
+            </div>
+            <form id="start-form">
+              <div class="form-grid">
+                <label
+                  >Service<select id="service">
+                    <option>Haircut</option>
+                    <option>Color touch-up</option>
+                    <option>Blowout</option>
+                  </select></label
+                ><label
+                  >Stylist<select id="stylist">
+                    <option>Lena</option>
+                    <option>Carla</option>
+                  </select></label
+                ><label
+                  >Length<select id="minutes">
+                    <option value="60">60 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="90">90 minutes</option>
+                  </select></label
+                ><label
+                  >Offer timing<select id="mode">
+                    <option value="demo">Quick demo · 20 seconds</option>
+                    <option value="standard">Standard · 15 minutes</option>
+                  </select></label
+                ><label class="wide"
+                  >Appointment starts <span>(Los Angeles time)</span
+                  ><input id="startsAt" type="datetime-local" required /></label
+                ><label class="wide"
+                  >Delivery scenario<select id="scenario">
+                    <option value="normal">Normal delivery</option>
+                    <option value="failed">First client's message fails</option>
+                    <option value="retry">
+                      First delivery recovers after a retry
+                    </option>
+                  </select></label
+                >
+              </div>
+              <p class="fine" id="clock-note">
+                Quick demo uses a simulated June 10, 2030 salon clock and
+                20-second offers.
+              </p>
+              <button class="primary" type="submit" id="start">
+                Start matching clients <span>↗</span>
+              </button>
+              <p class="fine">
+                One active opening at a time. Contacts between 9 am–7 pm; a
+                30-minute arrival buffer is required.
+              </p>
+            </form>
+            <div id="active-opening" hidden>
+              <div id="appointment-detail" class="appointment-detail"></div>
+              <ol class="steps">
+                <li id="step-match">Match</li>
+                <li id="step-offer">Offer</li>
+                <li id="step-hold">Hold</li>
+                <li id="step-book">Book</li>
+              </ol>
+              <div id="next-action" class="next-action"></div>
+              <div id="hold-controls" hidden>
+                <label
+                  >Staff note / Square reference<input
+                    id="staff-note"
+                    placeholder="For demo: Square update simulated by Carla"
+                    maxlength="500" /></label
+                ><label class="check"
+                  ><input id="square-confirmed" type="checkbox" /> I completed
+                  the Square update (simulate for this demo).</label
+                >
+                <div class="button-row">
+                  <button id="confirm" class="primary">Record booking</button
+                  ><button id="release" class="secondary">Release hold</button>
+                </div>
+                <p class="fine">
+                  Before releasing, tell the client personally. Their existing
+                  booking stays untouched.
+                </p>
+              </div>
+              <div class="button-row">
+                <button id="withdraw" class="text-button">
+                  Withdraw opening</button
+                ><button id="new-opening" class="secondary" hidden>
+                  Set up another opening
+                </button>
+              </div>
+            </div>
+          </section>
+          <section id="questions" class="card attention-card" hidden></section>
+          <section class="card" id="waitlist">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">02 / PEOPLE, IN ORDER</span>
+                <h2>The waitlist</h2>
+              </div>
+              <span class="fine">Fictional sample</span>
+            </div>
+            <p class="fine">
+              Earliest joined first. Service, time, stylist, duration, and
+              contact permission must all fit.
+            </p>
+            <div id="clients" class="client-list">
+              <p class="empty">
+                Start an opening to see matching clients and why others are
+                skipped.
+              </p>
+            </div>
+          </section>
+        </div>
+        <div class="client-column">
+          <section class="client-panel">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">CLIENT PREVIEW</span>
+                <h2>The other side of the text.</h2>
+              </div>
+            </div>
+            <p class="fine">A simulator, with no real messages sent.</p>
+            <label
+              >Preview an offer<select id="offer-select">
+                <option value="">No offers yet</option>
+              </select></label
+            >
+            <div class="phone">
+              <div class="phone-top">
+                <span class="avatar">J</span>
+                <div>Juniper Salon<small>Simulated conversation</small></div>
+              </div>
+              <div id="client-message" class="bubble">
+                Your client's offer will appear here when outreach starts.
+              </div>
+              <div id="deadline" class="deadline"></div>
+              <div class="client-actions" id="client-actions" hidden>
+                <button class="primary" id="accept">Yes, hold this spot</button
+                ><button class="secondary" id="decline">No, thank you</button
+                ><label class="sr-only" for="question-text"
+                  >Question for the salon</label
+                ><input
+                  id="question-text"
+                  placeholder="Ask the salon a question…"
+                  maxlength="500"
+                /><button class="text-button" id="ask">Send question</button
+                ><button class="text-button" id="stop">
+                  Stop future offers
+                </button>
+              </div>
+              <p id="client-feedback" role="status" aria-live="polite"></p>
+            </div>
+            <p class="fine">
+              An acceptance reserves a hold. Only staff can record the booking
+              after updating Square.
+            </p>
+          </section>
+          <section class="rules-note">
+            <span class="eyebrow">A SMALL PROMISE</span>
+            <h3>One opening.<br />One person at a time.</h3>
+            <p>Exclusive offers keep the next step clear for everyone.</p>
+          </section>
+        </div>
       </section>
-      <p class="footer">
-        Inspect the execution at
-        <a href="http://localhost:8233" target="_blank">localhost:8233</a>.
-      </p>
+      <section id="history" class="card history-card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">03 / NOTHING LOST IN THE SHUFFLE</span>
+            <h2>Activity journal</h2>
+          </div>
+          <span id="workflow-label" class="fine"></span>
+        </div>
+        <div id="events">
+          <p class="empty">Your opening's story will appear here.</p>
+        </div>
+      </section>
+      <footer>
+        <span>Juniper Salon · built around Lena & Carla's front desk</span
+        ><span>Powered by Temporal · local only</span>
+      </footer>
     </main>
     <script src="/app.js"></script>
   </body>
 </html>
-

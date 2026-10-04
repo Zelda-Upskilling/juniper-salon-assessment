@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-10-04T23:04:41.272Z",
+  "workflowId": "recovery-91c0b122-c3a4-4878-9f9c-77a9de780365",
+  "taskQueue": "recovery-484ad238-1d4c-463e-971b-fce4cba02c64",
+  "workerTermination": "SIGKILL",
+  "before": {
+    "offerId": "7f279f3a-62c5-4ac8-847e-05ba93dbbeb6:recovery-client",
+    "deadline": 1907341220146
+  },
+  "after": {
+    "offerId": "7f279f3a-62c5-4ac8-847e-05ba93dbbeb6:recovery-client",
+    "deadline": 1907341220146
+  },
+  "offerCount": 1,
+  "phaseAfterAcceptance": "held",
+  "result": "PASS"
+}
