@@ -4,7 +4,7 @@ A local prototype built from a 15-turn conversation with Lena. It gives the earl
 
 **Public, independent assessment repository. The application is not deployed. All clients and texts are simulated.**
 
-![Staff view and client hold](evidence/prototype-hold.jpg)
+![Staff overview and client waitlist](evidence/prototype-overview.jpg)
 
 ## Run with one command
 
@@ -22,12 +22,14 @@ Press Ctrl-C to stop the API and Worker. `npm run stop` stops the local Temporal
 
 ## A two-minute walkthrough
 
-1. Keep **Quick demo · 20 seconds** and the prefilled fictional June 10, 2030 appointment. Click **Start matching clients**.
-2. Anna receives the first exclusive offer. Ask a question: staff see it, but the original deadline does not change.
-3. Click **Yes, hold this spot**. The screen says **Needs Square update**. Further outreach stops; an acceptance is not a booking.
-4. Enter a staff note such as `Square update simulated by Carla`, check the Square-update confirmation, and click **Record booking**.
-5. Create another opening and let the first offer expire. Select Anna's old offer in **Preview an offer** and try replying: the server rejects it. The next eligible client has the current offer.
-6. Try **First client's message fails** or **First delivery recovers after a retry**. The activity journal distinguishes permanent failure from a recovered attempt.
+1. Read the overview: waiting clients, unanswered offers, staff attention, and bookings for the current opening. Click a client name to inspect their phone number, signup date, appointment, preferences, and contact history.
+2. Enter the canceled appointment in **Add a canceled appointment**. The waitlist is visible before outreach starts. Keep the prefilled June 10, 2030 date and **Quick demo · 20 seconds** under **Demo settings**. Click **Start offering this opening**.
+3. The next-step banner identifies the client with the offer. Click **View current client**, then **Open this client’s demo conversation**. Ask a question or click **Yes, hold this spot**. The simulator also opens from **Test a client reply** below the waitlist.
+4. Acceptance changes the banner to **Confirm this booking**. Enter a note such as `Square update simulated by Carla`, check the Square-update confirmation, and click **Record booking**. The client profile now shows when staff recorded the booking and the new appointment time.
+5. Create another opening and let the first offer expire. In the simulator, select Anna’s old offer and try replying: the server rejects it. The next matching client has the current offer.
+6. In **Demo settings**, try **First client's message fails** or **First delivery recovers after a retry**. Contact history shows the outcome.
+
+The waitlist is sorted by signup order. Search and filters let staff find clients who are still waiting, already contacted, or booked for this opening. A mismatch explains the actual reason, such as **Wants Carla · this slot is with Lena**. The waiting count includes clients without texting permission, whose rows clearly say **Do not contact**.
 
 To repeat while an offer or hold is active, **Withdraw opening**, then **Set up another opening**. A client opting out stays opted out in this durable desk across future openings. Opt-out does not cancel a held or booked appointment.
 
@@ -87,7 +89,7 @@ The recovery script creates an **isolated** workflow and Worker, kills only that
 
 ## Deliberate prototype boundaries
 
-- One active opening at a time; a fixed fictional waitlist is seeded for each opening. Live intake, spreadsheet import, multi-opening scheduling, and cross-opening conflicts are excluded.
+- One active opening at a time; a fixed fictional waitlist is seeded for each opening. Phone numbers, signup dates, and existing Square appointments in client profiles are fictional demo data. Contact and booking timestamps reflect this workflow’s recorded actions. The profile history covers the current opening only. Live intake, spreadsheet import, multi-opening scheduling, and cross-opening conflicts are excluded.
 - No actual SMS or Square API calls. The client preview is a simulator inside the staff page, not a secure client portal. Real provider idempotency, delivery webhooks, consent records, and reconciliation are needed before sending messages.
 - A staff confirmation is an assertion that Square was updated. The prototype cannot detect a booking made independently in Square; staff must withdraw that opening manually. Existing later appointments are never edited here.
 - Staff must personally contact clients when releasing or withdrawing a hold. No real outbound confirmation is sent.

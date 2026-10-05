@@ -119,6 +119,7 @@ export async function salonDesk(): Promise<void> {
       }
       if (cmd.reply === "accept") {
         offer.status = "held";
+        offer.respondedAt = now();
         state.phase = "held";
         event(
           `${offer.name} accepted. Hold reserved; staff must complete the change in Square.`,
@@ -130,6 +131,7 @@ export async function salonDesk(): Promise<void> {
       }
       if (cmd.reply === "decline") {
         offer.status = "declined";
+        offer.respondedAt = now();
         state.phase = "searching";
         event(`${offer.name} declined. Moving to the next eligible client.`);
         return accept(
@@ -175,6 +177,7 @@ export async function salonDesk(): Promise<void> {
             "Confirm you updated Square and enter a staff note first.",
           );
         offer.status = "booked";
+        offer.bookedAt = now();
         state.phase = "booked";
         state.staffNote = cmd.text;
         state.totals.booked++;
@@ -267,6 +270,7 @@ export async function salonDesk(): Promise<void> {
         continue;
       }
       current.status = "offered";
+      current.sentAt = now();
       current.deadline = now() + duration;
       event(
         `${client.name} has the exclusive offer.${attempts > 1 ? ` Delivery recovered after ${attempts} attempts.` : ""}`,

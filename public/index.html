@@ -11,9 +11,9 @@
       <a class="brand" href="/">juniper<span>SALON & COMPANY</span></a>
       <div class="nav">
         <span class="nav-label">YOUR FRONT DESK</span
-        ><a href="#desk" class="nav-active">◌ &nbsp; Opening desk</a
-        ><a href="#waitlist">☷ &nbsp; Waitlist</a
-        ><a href="#history">↗ &nbsp; Activity</a>
+        ><a href="#desk" class="nav-active">Opening desk</a
+        ><a href="#waitlist">Client waitlist</a
+        ><a href="#history">Contact history</a>
       </div>
       <div class="sidebar-bottom">
         <div class="monogram">J</div>
@@ -25,9 +25,9 @@
       <header>
         <div>
           <span class="eyebrow">JUNIPER / FRONT DESK</span>
-          <h1>Make room for someone.</h1>
+          <h1>Your salon waitlist.</h1>
           <p class="subtitle">
-            A thoughtful way to fill the unexpected openings.
+            See who is waiting, who has an offer, and what needs your attention.
           </p>
         </div>
         <span id="connection" class="connection">Connecting…</span>
@@ -36,21 +36,77 @@
         <span>DEMONSTRATION</span> Fictional clients. Simulated texts. Square
         bookings stay manual.
         <a href="http://localhost:8233" target="_blank" rel="noreferrer"
-          >View Temporal ↗</a
+          >Technical history ↗</a
         >
       </div>
       <div id="toast" role="status" aria-live="polite" hidden></div>
+      <section class="overview" aria-label="Waitlist overview">
+        <a href="#waitlist"
+          ><strong id="count-waiting">—</strong><span>clients waiting</span
+          ><small>For an earlier appointment</small></a
+        >
+        <a href="#opening-card"
+          ><strong id="count-offered">—</strong><span>waiting for a reply</span
+          ><small id="overview-deadline">No offer in progress</small></a
+        >
+        <a href="#opening-card"
+          ><strong id="count-attention">—</strong
+          ><span>need your attention</span
+          ><small>Holds or client questions</small></a
+        >
+        <a href="#waitlist"
+          ><strong id="count-booked">—</strong><span>booked</span
+          ><small>Latest opening</small></a
+        >
+      </section>
+      <section class="next-step-banner" aria-label="Your next step">
+        <div>
+          <span class="eyebrow">YOUR NEXT STEP</span>
+          <h2 id="desk-next-title">Choose the opening you want to fill</h2>
+          <p id="desk-next-copy">
+            Then we contact matching clients, one at a time.
+          </p>
+        </div>
+        <button id="desk-next-button" class="primary">Set up an opening</button>
+      </section>
+      <ol class="workflow-guide" aria-label="How it works">
+        <li>
+          <b>1</b
+          ><span
+            ><strong>You add an opening</strong>Service, stylist and appointment
+            time.</span
+          >
+        </li>
+        <li>
+          <b>2</b
+          ><span
+            ><strong>We offer it in signup order</strong>One matching client
+            gets time to reply.</span
+          >
+        </li>
+        <li>
+          <b>3</b
+          ><span
+            ><strong>You finish in Square</strong>When they accept, confirm or
+            release the hold.</span
+          >
+        </li>
+      </ol>
       <section class="workspace">
         <div class="staff-column">
-          <section class="card opening-card">
+          <section class="card opening-card" id="opening-card">
             <div class="section-heading">
               <div>
-                <span class="eyebrow">01 / THE OPENING</span>
-                <h2 id="opening-title">An empty chair, a new possibility.</h2>
+                <span class="eyebrow">THE OPENING TO FILL</span>
+                <h2 id="opening-title">Add a canceled appointment</h2>
               </div>
               <span id="phase" class="pill">Ready</span>
             </div>
             <form id="start-form">
+              <p class="fine">
+                Enter the free slot from Square. Nobody is contacted until you
+                start.
+              </p>
               <div class="form-grid">
                 <label
                   >Service<select id="service">
@@ -58,26 +114,34 @@
                     <option>Color touch-up</option>
                     <option>Blowout</option>
                   </select></label
-                ><label
-                  >Stylist<select id="stylist">
+                >
+                <label
+                  >Stylist with the opening<select id="stylist">
                     <option>Lena</option>
                     <option>Carla</option>
                   </select></label
-                ><label
-                  >Length<select id="minutes">
+                >
+                <label
+                  >Appointment length<select id="minutes">
                     <option value="60">60 minutes</option>
                     <option value="30">30 minutes</option>
                     <option value="90">90 minutes</option>
                   </select></label
-                ><label
+                >
+                <label
+                  >Appointment starts <span>(Los Angeles)</span
+                  ><input id="startsAt" type="datetime-local" required
+                /></label>
+              </div>
+              <details class="demo-settings">
+                <summary>Demo settings: timing and message failures</summary>
+                <label
                   >Offer timing<select id="mode">
                     <option value="demo">Quick demo · 20 seconds</option>
                     <option value="standard">Standard · 15 minutes</option>
                   </select></label
-                ><label class="wide"
-                  >Appointment starts <span>(Los Angeles time)</span
-                  ><input id="startsAt" type="datetime-local" required /></label
-                ><label class="wide"
+                >
+                <label
                   >Delivery scenario<select id="scenario">
                     <option value="normal">Normal delivery</option>
                     <option value="failed">First client's message fails</option>
@@ -86,26 +150,23 @@
                     </option>
                   </select></label
                 >
-              </div>
-              <p class="fine" id="clock-note">
-                Quick demo uses a simulated June 10, 2030 salon clock and
-                20-second offers.
-              </p>
+              </details>
+              <p class="fine" id="clock-note"></p>
               <button class="primary" type="submit" id="start">
-                Start matching clients <span>↗</span>
+                Start offering this opening
               </button>
               <p class="fine">
-                One active opening at a time. Contacts between 9 am–7 pm; a
-                30-minute arrival buffer is required.
+                One client at a time. Offers go out from 9 am to 7 pm, with at
+                least 30 minutes left to reach the salon.
               </p>
             </form>
             <div id="active-opening" hidden>
               <div id="appointment-detail" class="appointment-detail"></div>
               <ol class="steps">
-                <li id="step-match">Match</li>
-                <li id="step-offer">Offer</li>
-                <li id="step-hold">Hold</li>
-                <li id="step-book">Book</li>
+                <li id="step-match">Find a match</li>
+                <li id="step-offer">Wait for reply</li>
+                <li id="step-hold">Update Square</li>
+                <li id="step-book">Booked</li>
               </ol>
               <div id="next-action" class="next-action"></div>
               <div id="hold-controls" hidden>
@@ -140,14 +201,37 @@
           <section class="card" id="waitlist">
             <div class="section-heading">
               <div>
-                <span class="eyebrow">02 / PEOPLE, IN ORDER</span>
-                <h2>The waitlist</h2>
+                <span class="eyebrow">CLIENTS WAITING FOR AN EARLIER TIME</span>
+                <h2>Client waitlist</h2>
               </div>
               <span class="fine">Fictional sample</span>
             </div>
-            <p class="fine">
-              Earliest joined first. Service, time, stylist, duration, and
-              contact permission must all fit.
+            <p class="waitlist-explainer">
+              First to join, first to hear. We only offer a slot when the
+              service, time and preferred stylist fit. Click a name for contact
+              details and history.
+            </p>
+            <div class="waitlist-tools">
+              <label class="search-label"
+                ><span class="sr-only">Find a client</span
+                ><input
+                  id="client-search"
+                  type="search"
+                  placeholder="Find a client by name" /></label
+              ><label class="filter-label"
+                ><span class="sr-only">Filter clients</span
+                ><select id="client-filter">
+                  <option value="all">All clients</option>
+                  <option value="waiting">Still waiting</option>
+                  <option value="contacted">
+                    Contacted for latest opening
+                  </option>
+                  <option value="booked">Booked for latest opening</option>
+                </select></label
+              >
+            </div>
+            <p class="fine" id="list-context">
+              Listed by date joined, oldest first.
             </p>
             <div id="clients" class="client-list">
               <p class="empty">
@@ -158,66 +242,70 @@
           </section>
         </div>
         <div class="client-column">
-          <section class="client-panel">
-            <div class="section-heading">
-              <div>
-                <span class="eyebrow">CLIENT PREVIEW</span>
-                <h2>The other side of the text.</h2>
+          <details id="simulator" class="simulator">
+            <summary>
+              Test a client reply
+              <span>Demo only · no real texts are sent</span>
+            </summary>
+            <section class="client-panel">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">DEMO CONTROLS</span>
+                  <h2>Try the client’s response</h2>
+                </div>
               </div>
-            </div>
-            <p class="fine">A simulator, with no real messages sent.</p>
-            <label
-              >Preview an offer<select id="offer-select">
-                <option value="">No offers yet</option>
-              </select></label
-            >
-            <div class="phone">
-              <div class="phone-top">
-                <span class="avatar">J</span>
-                <div>Juniper Salon<small>Simulated conversation</small></div>
+              <p class="fine">A simulator, with no real messages sent.</p>
+              <label
+                >Preview an offer<select id="offer-select">
+                  <option value="">No offers yet</option>
+                </select></label
+              >
+              <div class="phone">
+                <div class="phone-top">
+                  <span class="avatar">J</span>
+                  <div>Juniper Salon<small>Simulated conversation</small></div>
+                </div>
+                <div id="client-message" class="bubble">
+                  Your client's offer will appear here when outreach starts.
+                </div>
+                <div id="deadline" class="deadline"></div>
+                <div class="client-actions" id="client-actions" hidden>
+                  <button class="primary" id="accept">
+                    Yes, hold this spot</button
+                  ><button class="secondary" id="decline">No, thank you</button
+                  ><label class="sr-only" for="question-text"
+                    >Question for the salon</label
+                  ><input
+                    id="question-text"
+                    placeholder="Ask the salon a question…"
+                    maxlength="500"
+                  /><button class="text-button" id="ask">Send question</button
+                  ><button class="text-button" id="stop">
+                    Stop future offers
+                  </button>
+                </div>
+                <p id="client-feedback" role="status" aria-live="polite"></p>
               </div>
-              <div id="client-message" class="bubble">
-                Your client's offer will appear here when outreach starts.
-              </div>
-              <div id="deadline" class="deadline"></div>
-              <div class="client-actions" id="client-actions" hidden>
-                <button class="primary" id="accept">Yes, hold this spot</button
-                ><button class="secondary" id="decline">No, thank you</button
-                ><label class="sr-only" for="question-text"
-                  >Question for the salon</label
-                ><input
-                  id="question-text"
-                  placeholder="Ask the salon a question…"
-                  maxlength="500"
-                /><button class="text-button" id="ask">Send question</button
-                ><button class="text-button" id="stop">
-                  Stop future offers
-                </button>
-              </div>
-              <p id="client-feedback" role="status" aria-live="polite"></p>
-            </div>
-            <p class="fine">
-              An acceptance reserves a hold. Only staff can record the booking
-              after updating Square.
-            </p>
-          </section>
-          <section class="rules-note">
-            <span class="eyebrow">A SMALL PROMISE</span>
-            <h3>One opening.<br />One person at a time.</h3>
-            <p>Exclusive offers keep the next step clear for everyone.</p>
-          </section>
+              <p class="fine">
+                An acceptance reserves a hold. Only staff can record the booking
+                after updating Square.
+              </p>
+            </section>
+          </details>
         </div>
       </section>
       <section id="history" class="card history-card">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">03 / NOTHING LOST IN THE SHUFFLE</span>
-            <h2>Activity journal</h2>
+            <span class="eyebrow">THIS OPENING</span>
+            <h2>Contact & booking history</h2>
           </div>
           <span id="workflow-label" class="fine"></span>
         </div>
         <div id="events">
-          <p class="empty">Your opening's story will appear here.</p>
+          <p class="empty">
+            Messages and booking updates for this opening will appear here.
+          </p>
         </div>
       </section>
       <footer>
@@ -225,6 +313,19 @@
         ><span>Powered by Temporal · local only</span>
       </footer>
     </main>
+    <dialog id="client-dialog" aria-labelledby="profile-name">
+      <div class="dialog-top">
+        <span class="eyebrow">CLIENT DETAILS · FICTIONAL DEMO DATA</span
+        ><button
+          id="close-client"
+          class="secondary"
+          aria-label="Close client details"
+        >
+          Close
+        </button>
+      </div>
+      <div id="client-profile"></div>
+    </dialog>
     <script src="/app.js"></script>
   </body>
 </html>

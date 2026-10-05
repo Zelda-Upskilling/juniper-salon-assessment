@@ -105,6 +105,10 @@ test("Temporal acceptance, failure and recovery contracts", async (t) => {
           const s = await f.until((s) =>
             s.offers.some((o) => o.status === "offered"),
           );
+          assert.ok(
+            s.offers[0].sentAt,
+            "a delivered offer records when the client was contacted",
+          );
           const id = s.offers[0].id;
           const key = randomUUID();
           const results = await Promise.all([
@@ -144,7 +148,12 @@ test("Temporal acceptance, failure and recovery contracts", async (t) => {
             ).ok,
             true,
           );
-          assert.equal((await f.state()).totals.booked, 1);
+          const booked = await f.state();
+          assert.equal(booked.totals.booked, 1);
+          assert.ok(
+            booked.offers[0].bookedAt! >= booked.offers[0].respondedAt!,
+          );
+          assert.ok(booked.offers[0].respondedAt! >= booked.offers[0].sentAt!);
           await f.h.terminate();
         },
       );

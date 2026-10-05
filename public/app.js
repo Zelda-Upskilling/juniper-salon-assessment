@@ -148,12 +148,12 @@ function render() {
   );
   if (!manualSelection)
     selectedOffer = active?.id || state.offers.at(-1)?.id || "";
-  $("phase").textContent = names[state.phase];
+  $("phase").textContent = creating ? "New opening" : names[state.phase];
   const formVisible = creating || state.phase === "idle";
   $("start-form").hidden = !formVisible;
   $("active-opening").hidden = formVisible;
   $("opening-title").textContent = formVisible
-    ? "An empty chair, a new possibility."
+    ? "Add a canceled appointment"
     : `${state.opening.service} with ${state.opening.stylist}`;
   if (state.opening)
     $("appointment-detail").textContent =
@@ -186,15 +186,9 @@ function render() {
   $("new-opening").hidden = ["idle", "searching", "offering", "held"].includes(
     state.phase,
   );
-  $("clients").innerHTML = state.clients.length
-    ? state.clients
-        .map((c) => {
-          const offer = state.offers.find((o) => o.clientId === c.id);
-          const status = offer?.status || c.reason || "Waiting";
-          return `<div class="client-row"><span class="initials">${esc(c.name[0])}</span><div>${esc(c.name)}<small>#${c.joined} · ${esc(c.service)} · ${c.minutes} min · ${esc(c.stylist)}</small></div><span class="client-status ${["offered", "held", "booked"].includes(status) ? "live" : ""}">${esc(status.replaceAll("_", " "))}</span></div>`;
-        })
-        .join("")
-    : '<p class="empty">Start an opening to see matching clients and why others are skipped.</p>';
+  renderOverview();
+  renderWaitlist();
+  if ($("client-dialog").open) renderProfile();
   $("offer-select").innerHTML = state.offers.length
     ? state.offers
         .map(
@@ -371,6 +365,233 @@ $("mode").onchange = () => {
       ? "Quick demo uses a simulated June 10, 2030 salon clock and 20-second offers."
       : "Standard mode uses real Los Angeles time and 15-minute offers. Texts remain simulated.";
 };
+let selectedClient = null;
+function clientOffer(c) {
+  return state.offers.find((o) => o.clientId === c.id);
+}
+function clientWaiting(c) {
+  return !["held", "booked"].includes(clientOffer(c)?.status);
+}
+function fitReason(c) {
+  if (!c.consent) return "Do not text · permission needed";
+  if (!state.opening || creating)
+    return "Match checked when you start an opening";
+  if (c.stylist !== "Any" && c.stylist !== state.opening.stylist)
+    return `Wants ${c.stylist} · this slot is with ${state.opening.stylist}`;
+  if (c.minutes > state.opening.minutes)
+    return `Needs ${c.minutes} min · this slot has ${state.opening.minutes}`;
+  if (c.service !== state.opening.service)
+    return `Wants ${c.service} · this slot is ${state.opening.service}`;
+  if (c.reason) return "Not available at this time";
+  return "Matches this opening";
+}
+function contactStatus(c) {
+  const o = clientOffer(c);
+  return (
+    {
+      sending: "Sending offer",
+      offered: "Waiting for reply",
+      held: "Accepted · update Square",
+      booked: "Booked for latest opening",
+      declined: "Declined this opening",
+      expired: "No reply before deadline",
+      failed: "Message not delivered",
+      canceled: "Offer withdrawn",
+      released: "Hold released",
+      opted_out: "Asked to stop texts",
+    }[o?.status] || (!c.consent ? "Do not contact" : "Not contacted yet")
+  );
+}
+function contactTime(c) {
+  const o = clientOffer(c);
+  return (
+    o?.sentAt ??
+    state.events.find((e) =>
+      e.text.startsWith(`${c.name} has the exclusive offer.`),
+    )?.at
+  );
+}
+function bookingTime(c) {
+  return (
+    clientOffer(c)?.bookedAt ??
+    state.events.find((e) =>
+      e.text.startsWith(`Booking recorded by staff for ${c.name}.`),
+    )?.at
+  );
+}
+function renderWaitlist() {
+  const query = $("client-search").value.toLowerCase().trim(),
+    filter = $("client-filter").value;
+  const clients = [...state.clients]
+    .sort((a, b) => a.joined - b.joined)
+    .filter((c) => c.name.toLowerCase().includes(query))
+    .filter(
+      (c) =>
+        filter === "all" ||
+        (filter === "waiting" && clientWaiting(c)) ||
+        (filter === "contacted" && !!clientOffer(c)) ||
+        (filter === "booked" && clientOffer(c)?.status === "booked"),
+    );
+  $("list-context").textContent =
+    `${clients.length} of ${state.clients.length} clients shown · Signup order, oldest first. ${state.opening ? "Contact history is for the latest opening." : "No clients have been contacted yet."}`;
+  $("clients").innerHTML = clients.length
+    ? clients
+        .map((c) => {
+          const o = clientOffer(c),
+            sent = contactTime(c);
+          return `<button type="button" class="client-row profile-link" data-client="${esc(c.id)}" aria-label="View ${esc(c.name)} contact details"><span class="queue-number" title="Signup order">${c.joined}</span><span class="client-identity"><strong>${esc(c.name)}</strong><small>${esc(c.service)} · ${c.minutes} min · ${c.stylist === "Any" ? "Any stylist" : esc(c.stylist) + " preferred"}</small><small>Joined ${esc(time(c.joinedAt, { month: "short", day: "numeric" }))}</small></span><span class="client-progress"><span class="client-status ${["offered", "held", "booked"].includes(o?.status) ? "live" : ""}">${esc(contactStatus(c))}</span><small>${esc(o ? (sent ? "Last text: " + dateTime(sent) : "No delivered text") : fitReason(c))}</small><span class="details-link">View details →</span></span></button>`;
+        })
+        .join("")
+    : '<p class="empty">No clients match this filter.</p>';
+  $("clients")
+    .querySelectorAll("[data-client]")
+    .forEach((b) => (b.onclick = () => openClient(b.dataset.client)));
+}
+function renderOverview() {
+  const active = state.offers.find((o) =>
+    ["sending", "offered", "held"].includes(o.status),
+  );
+  const unresolved = state.questions.filter((q) => !q.resolved).length;
+  $("count-waiting").textContent = state.clients.filter(clientWaiting).length;
+  $("count-offered").textContent = state.offers.filter((o) =>
+    ["sending", "offered"].includes(o.status),
+  ).length;
+  $("count-attention").textContent =
+    unresolved + state.offers.filter((o) => o.status === "held").length;
+  $("count-booked").textContent = state.offers.filter(
+    (o) => o.status === "booked",
+  ).length;
+  let title = "Choose the opening you want to fill",
+    copy =
+      "Enter the canceled appointment below. We will offer it to matching clients in signup order.",
+    button = "Set up an opening";
+  let action = () => {
+    if (state.phase !== "idle") creating = true;
+    render();
+    $("service").focus();
+    $("opening-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  if (!creating && state.phase === "held") {
+    title = `${active.name} said yes. Finish the booking in Square.`;
+    copy =
+      "The spot is held. Nobody else will receive an offer until you confirm or release it.";
+    button = "Confirm this booking";
+    action = () => {
+      $("staff-note").focus();
+      $("hold-controls").scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    };
+  } else if (!creating && ["searching", "offering"].includes(state.phase)) {
+    title = active
+      ? `Waiting for ${active.name} to reply`
+      : "Finding the next client who fits";
+    copy =
+      "You can carry on with the salon. A decline or missed deadline moves to the next matching client automatically.";
+    button = "View current client";
+    action = () => {
+      if (active) openClient(active.clientId);
+    };
+  } else if (!creating && state.phase === "booked") {
+    title = "This opening is filled.";
+    copy =
+      "The booking is recorded. Add the next canceled appointment when you are ready.";
+    button = "Add another opening";
+  } else if (
+    !creating &&
+    (state.phase === "withdrawn" || state.phase === "unfilled")
+  ) {
+    title =
+      state.phase === "unfilled"
+        ? "No booking for this opening yet"
+        : "This opening is closed";
+    copy =
+      "Review the client list and contact history before adding another opening.";
+    button = "Add another opening";
+  }
+  if (!creating && unresolved) {
+    title = `${unresolved} client question${unresolved > 1 ? "s" : ""} need${unresolved === 1 ? "s" : ""} a reply`;
+    copy =
+      "Open the question below. Their offer deadline keeps running while you respond.";
+    button = "See client question";
+    action = () =>
+      $("questions").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  $("desk-next-title").textContent = title;
+  $("desk-next-copy").textContent = copy;
+  $("desk-next-button").textContent = button;
+  $("desk-next-button").onclick = action;
+  $("overview-deadline").textContent =
+    active?.status === "offered"
+      ? `Offer ends at ${time(active.deadline, { second: "2-digit" })}`
+      : "No reply needed right now";
+  document
+    .querySelectorAll(".workflow-guide li")
+    .forEach((li, i) =>
+      li.classList.toggle(
+        "current",
+        (i === 0 && (creating || state.phase === "idle")) ||
+          (i === 1 && ["searching", "offering"].includes(state.phase)) ||
+          (i === 2 && ["held", "booked"].includes(state.phase)),
+      ),
+    );
+}
+function openClient(id) {
+  selectedClient = id;
+  renderProfile();
+  if (!$("client-dialog").open) $("client-dialog").showModal();
+  $("client-dialog").scrollTop = 0;
+}
+function renderProfile() {
+  const c = state.clients.find((c) => c.id === selectedClient);
+  if (!c) return;
+  const o = clientOffer(c),
+    sent = contactTime(c),
+    booked = bookingTime(c);
+  const history = state.events.filter((e) => e.text.includes(c.name));
+  const row = (label, value) =>
+    `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
+  $("client-profile").innerHTML =
+    `<h2 id="profile-name">${esc(c.name)}</h2><p class="profile-status">${esc(contactStatus(c))}</p>
+    <div class="contact-box"><div><span class="eyebrow">MOBILE · DEMO NUMBER</span><strong>${esc(c.mobile)}</strong><span>${c.consent ? "Permission to text: yes" : "Do not text: no permission or opted out"}</span></div><button class="secondary" id="copy-number">Copy demo number</button></div><p id="copy-status" class="fine" role="status">No real texts or calls are made by this prototype.</p>
+    <dl class="profile-facts">${row("Joined the waitlist", dateTime(c.joinedAt) + ` · position ${c.joined}`)}${row("Service requested", `${c.service} · ${c.minutes} minutes`)}${row("Stylist preference", c.stylist === "Any" ? "Any stylist is fine" : c.stylist + " only")}${row("Available for an earlier visit", dateTime(c.availableFrom) + " to " + time(c.availableUntil))}${row("Appointment before this offer", dateTime(c.existingAppointment) + " · fictional Square entry")}${row("Match for this opening", fitReason(c))}${row("Last offer text", sent ? dateTime(sent) : "No delivered message for this opening")}${row("Booking recorded", booked ? dateTime(booked) : "No new booking recorded")}${o?.status === "booked" ? row("New appointment", dateTime(state.opening.startsAt)) : ""}${o?.status === "held" ? row("Held appointment", dateTime(state.opening.startsAt) + " · needs Square confirmation") : ""}</dl>
+    <div class="profile-history"><h3>Contact history for this opening</h3><p class="fine">${state.opening?.mode === "demo" ? "Demo dates and times. " : ""}Earlier conversations outside this app are not imported.</p>${history.length ? `<ol>${history.map((e) => `<li><time>${esc(dateTime(e.at))}</time><span>${esc(e.text)}</span></li>`).join("")}</ol>` : "<p>No contact recorded yet. The app will contact matching clients after you start an opening.</p>"}</div>
+    ${o ? '<button id="profile-preview" class="primary">Open this client’s demo conversation</button>' : '<p class="fine">No offer to preview. Start an opening to contact matching clients in order.</p>'}`;
+  $("copy-number").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(c.mobile);
+      $("copy-status").textContent =
+        "Demo number copied. This is a fictional contact.";
+    } catch {
+      $("copy-status").textContent = "Select the number above to copy it.";
+    }
+  };
+  if (o)
+    $("profile-preview").onclick = () => {
+      selectedOffer = o.id;
+      manualSelection = true;
+      $("offer-select").value = o.id;
+      renderClient();
+      $("client-dialog").close();
+      $("simulator").open = true;
+      $("simulator").scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+}
+document.querySelectorAll(".overview a")[0].onclick = () => {
+  $("client-filter").value = "waiting";
+  $("client-search").value = "";
+  renderWaitlist();
+};
+document.querySelectorAll(".overview a")[3].onclick = () => {
+  $("client-filter").value = "booked";
+  $("client-search").value = "";
+  renderWaitlist();
+};
+$("client-search").oninput = renderWaitlist;
+$("client-filter").onchange = renderWaitlist;
+$("close-client").onclick = () => $("client-dialog").close();
+
 $("mode").onchange();
 refresh();
 setInterval(refresh, 1500);

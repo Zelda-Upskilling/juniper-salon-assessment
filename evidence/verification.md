@@ -17,3 +17,11 @@ Verified locally on October 4, 2026. These checks do not establish assessment-gr
 All waitlist clients are fictional. The June 10, 2030 clock and 20-second offers are accelerated demo inputs. Live SMS, live Square writes, production security, and real business improvement were not tested.
 
 - Presentation: PDF has exactly four 16:9 pages. Every rendered page was visually inspected; required problem, behavior, simulation boundaries, and next step are present.
+
+## Staff dashboard revision
+
+- Verified the first-visit screen using an isolated empty desk: six fictional clients appear before outreach, with signup order and clickable profiles.
+- Chrome walkthrough: started an opening, opened the current client's profile and demo conversation, accepted, followed the confirmation action, and recorded a booking. Overview counts and client timestamps updated.
+- Verified search, booked filter, a named stylist mismatch, and historical profile details after Worker replay.
+- Desktop overview and profile screenshots: `prototype-overview.jpg` and `client-details.jpg`. The responsive overview was checked at 487 CSS pixels with no page overflow, and the client dialog fit within that width.
+- The ten Temporal tests passed, including assertions that sent, accepted, and booked timestamps are ordered. Type checking and the five API error checks passed.

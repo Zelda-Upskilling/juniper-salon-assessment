@@ -8,6 +8,8 @@ export type Client = {
   availableFrom: string;
   availableUntil: string;
   joined: number;
+  joinedAt?: string;
+  existingAppointment?: string;
   consent: boolean;
   delivery: "ok" | "fail" | "retry";
 };
@@ -25,6 +27,9 @@ export type Offer = {
   clientId: string;
   name: string;
   deadline: number;
+  sentAt?: number;
+  respondedAt?: number;
+  bookedAt?: number;
   status:
     | "sending"
     | "offered"

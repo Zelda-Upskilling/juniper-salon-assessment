@@ -13,6 +13,7 @@ import express, {
 import type { Client, Command, Desk, Opening, Result } from "./types";
 import { salonDesk } from "./workflows";
 import { eligible, DEMO_NOW } from "./rules";
+import { sampleClients, demoProfile } from "./demo-clients";
 const app = express();
 app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(process.cwd(), "public")));
@@ -38,55 +39,6 @@ async function desk() {
     }
   }
   return client.workflow.getHandle(workflowId);
-}
-export function sampleClients(opening: Opening, scenario = "normal"): Client[] {
-  const from = new Date(Date.parse(opening.startsAt) - 3600000).toISOString();
-  const until = new Date(
-    Date.parse(opening.startsAt) + 4 * 3600000,
-  ).toISOString();
-  const base = {
-    mobile: "(555) 010-0000",
-    service: opening.service,
-    minutes: opening.minutes,
-    stylist: "Any",
-    availableFrom: from,
-    availableUntil: until,
-    consent: true,
-    delivery: "ok" as const,
-  };
-  return [
-    {
-      ...base,
-      id: "anna",
-      name: "Anna Rivera",
-      joined: 1,
-      delivery:
-        scenario === "failed" ? "fail" : scenario === "retry" ? "retry" : "ok",
-    },
-    {
-      ...base,
-      id: "mei",
-      name: "Mei Chen",
-      joined: 2,
-      stylist: opening.stylist,
-    },
-    { ...base, id: "maya", name: "Maya Brooks", joined: 3 },
-    {
-      ...base,
-      id: "jules",
-      name: "Jules Reed",
-      joined: 4,
-      stylist: "Other stylist",
-    },
-    {
-      ...base,
-      id: "noor",
-      name: "Noor Ellis",
-      joined: 5,
-      minutes: opening.minutes + 30,
-    },
-    { ...base, id: "sofia", name: "Sofia Park", joined: 6, consent: false },
-  ];
 }
 function bad(message: string): never {
   throw Object.assign(new Error(message), { status: 400 });
@@ -165,10 +117,22 @@ app.get("/api/health", async (_req, res) => {
 app.get("/api/desk", async (_req, res) => {
   const handle = await desk();
   const state = await handle.query<Desk>("getDesk");
+  const preview: Opening = state.opening ?? {
+    id: "preview",
+    service: "Haircut",
+    stylist: "Lena",
+    minutes: 60,
+    startsAt: new Date(DEMO_NOW + 7200000).toISOString(),
+    mode: "demo",
+    timezone: "America/Los_Angeles",
+  };
+  const clients = (
+    state.clients.length ? state.clients : sampleClients(preview)
+  ).map((c) => demoProfile(c, preview));
   res.json({
     ...state,
     workflowId,
-    clients: state.clients.map((c) => ({
+    clients: clients.map((c) => ({
       ...c,
       reason: state.opening ? eligible(c, state.opening) : null,
     })),
@@ -201,17 +165,15 @@ app.use((error: any, _req: Request, res: Response, _next: NextFunction) => {
         ? 400
         : error.status || 503;
   if (status === 503) res.setHeader("Retry-After", "2");
-  res
-    .status(status)
-    .json({
-      ok: false,
-      error:
-        status === 503
-          ? "The salon service is reconnecting. Your workflow is saved; retry shortly."
-          : status === 413
-            ? "Request is too large."
-            : error.message || "Invalid request.",
-    });
+  res.status(status).json({
+    ok: false,
+    error:
+      status === 503
+        ? "The salon service is reconnecting. Your workflow is saved; retry shortly."
+        : status === 413
+          ? "Request is too large."
+          : error.message || "Invalid request.",
+  });
 });
 app.listen(Number(process.env.PORT || 3000), "127.0.0.1", () =>
   console.log("Juniper Salon: http://localhost:3000"),
