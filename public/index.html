@@ -7,97 +7,34 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <aside class="sidebar">
-      <a class="brand" href="/">juniper<span>SALON & COMPANY</span></a>
-      <div class="nav">
-        <span class="nav-label">YOUR FRONT DESK</span
-        ><a href="#desk" class="nav-active">Opening desk</a
-        ><a href="#waitlist">Client waitlist</a
-        ><a href="#history">Contact history</a>
-      </div>
-      <div class="sidebar-bottom">
-        <div class="monogram">J</div>
-        <p>A little less chasing.<br />A little more salon time.</p>
-        <small>Local assessment prototype</small>
-      </div>
-    </aside>
     <main id="desk">
-      <header>
-        <div>
-          <span class="eyebrow">JUNIPER / FRONT DESK</span>
-          <h1>Your salon waitlist.</h1>
-          <p class="subtitle">
-            See who is waiting, who has an offer, and what needs your attention.
-          </p>
-        </div>
-        <span id="connection" class="connection">Connecting…</span>
+      <header class="masthead">
+        <a class="brand" href="/">juniper<span>SALON & COMPANY</span></a>
+        <nav aria-label="Front desk">
+          <a id="waiting-link" href="#waitlist"
+            ><span id="count-waiting">—</span> clients waiting</a
+          ><a id="help-link" href="#how-it-works">How it works</a>
+        </nav>
       </header>
-      <div class="disclosure">
-        <span>DEMONSTRATION</span> Fictional clients. Simulated texts. Square
-        bookings stay manual.
-        <a href="http://localhost:8233" target="_blank" rel="noreferrer"
-          >Technical history ↗</a
-        >
-      </div>
+      <p class="demo-note">
+        Demo · fictional clients and texts. Staff update Square manually.
+      </p>
       <div id="toast" role="status" aria-live="polite" hidden></div>
-      <section class="overview" aria-label="Waitlist overview">
-        <a href="#waitlist"
-          ><strong id="count-waiting">—</strong><span>clients waiting</span
-          ><small>For an earlier appointment</small></a
-        >
-        <a href="#opening-card"
-          ><strong id="count-offered">—</strong><span>waiting for a reply</span
-          ><small id="overview-deadline">No offer in progress</small></a
-        >
-        <a href="#opening-card"
-          ><strong id="count-attention">—</strong
-          ><span>need your attention</span
-          ><small>Holds or client questions</small></a
-        >
-        <a href="#waitlist"
-          ><strong id="count-booked">—</strong><span>booked</span
-          ><small>Latest opening</small></a
-        >
-      </section>
       <section class="next-step-banner" aria-label="Your next step">
         <div>
-          <span class="eyebrow">YOUR NEXT STEP</span>
-          <h2 id="desk-next-title">Choose the opening you want to fill</h2>
+          <h1 id="desk-next-title">Choose the opening you want to fill</h1>
           <p id="desk-next-copy">
             Then we contact matching clients, one at a time.
           </p>
         </div>
         <button id="desk-next-button" class="primary">Set up an opening</button>
       </section>
-      <ol class="workflow-guide" aria-label="How it works">
-        <li>
-          <b>1</b
-          ><span
-            ><strong>You add an opening</strong>Service, stylist and appointment
-            time.</span
-          >
-        </li>
-        <li>
-          <b>2</b
-          ><span
-            ><strong>We offer it in signup order</strong>One matching client
-            gets time to reply.</span
-          >
-        </li>
-        <li>
-          <b>3</b
-          ><span
-            ><strong>You finish in Square</strong>When they accept, confirm or
-            release the hold.</span
-          >
-        </li>
-      </ol>
       <section class="workspace">
         <div class="staff-column">
           <section class="card opening-card" id="opening-card">
             <div class="section-heading">
               <div>
-                <span class="eyebrow">THE OPENING TO FILL</span>
+                <span class="eyebrow">APPOINTMENT</span>
                 <h2 id="opening-title">Add a canceled appointment</h2>
               </div>
               <span id="phase" class="pill">Ready</span>
@@ -155,20 +92,9 @@
               <button class="primary" type="submit" id="start">
                 Start offering this opening
               </button>
-              <p class="fine">
-                One client at a time. Offers go out from 9 am to 7 pm, with at
-                least 30 minutes left to reach the salon.
-              </p>
             </form>
             <div id="active-opening" hidden>
               <div id="appointment-detail" class="appointment-detail"></div>
-              <ol class="steps">
-                <li id="step-match">Find a match</li>
-                <li id="step-offer">Wait for reply</li>
-                <li id="step-hold">Update Square</li>
-                <li id="step-book">Booked</li>
-              </ol>
-              <div id="next-action" class="next-action"></div>
               <div id="hold-controls" hidden>
                 <label
                   >Staff note / Square reference<input
@@ -190,9 +116,7 @@
               </div>
               <div class="button-row">
                 <button id="withdraw" class="text-button">
-                  Withdraw opening</button
-                ><button id="new-opening" class="secondary" hidden>
-                  Set up another opening
+                  Withdraw opening
                 </button>
               </div>
             </div>
@@ -201,15 +125,12 @@
           <section class="card" id="waitlist">
             <div class="section-heading">
               <div>
-                <span class="eyebrow">CLIENTS WAITING FOR AN EARLIER TIME</span>
                 <h2>Client waitlist</h2>
               </div>
-              <span class="fine">Fictional sample</span>
             </div>
             <p class="waitlist-explainer">
-              First to join, first to hear. We only offer a slot when the
-              service, time and preferred stylist fit. Click a name for contact
-              details and history.
+              Signup order, oldest first. Select a name for contact details and
+              history.
             </p>
             <div class="waitlist-tools">
               <label class="search-label"
@@ -223,10 +144,8 @@
                 ><select id="client-filter">
                   <option value="all">All clients</option>
                   <option value="waiting">Still waiting</option>
-                  <option value="contacted">
-                    Contacted for latest opening
-                  </option>
-                  <option value="booked">Booked for latest opening</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="booked">Booked</option>
                 </select></label
               >
             </div>
@@ -294,23 +213,57 @@
           </details>
         </div>
       </section>
-      <section id="history" class="card history-card">
-        <div class="section-heading">
-          <div>
-            <span class="eyebrow">THIS OPENING</span>
-            <h2>Contact & booking history</h2>
-          </div>
-          <span id="workflow-label" class="fine"></span>
-        </div>
+      <details id="history" class="history-card quiet-details">
+        <summary>Contact & booking history <span>Latest opening</span></summary>
+        <span id="workflow-label" class="fine"></span>
         <div id="events">
           <p class="empty">
             Messages and booking updates for this opening will appear here.
           </p>
         </div>
-      </section>
+      </details>
+      <details id="how-it-works" class="quiet-details">
+        <summary>How offers work</summary>
+        <ol class="workflow-guide" aria-label="How it works">
+          <li>
+            <b>1</b
+            ><span
+              ><strong>You add an opening</strong>Service, stylist and
+              appointment time.</span
+            >
+          </li>
+          <li>
+            <b>2</b
+            ><span
+              ><strong>We offer it in signup order</strong>One matching client
+              gets time to reply.</span
+            >
+          </li>
+          <li>
+            <b>3</b
+            ><span
+              ><strong>You finish in Square</strong>When they accept, confirm or
+              release the hold.</span
+            >
+          </li>
+        </ol>
+        <p class="fine">
+          We only contact clients whose service, availability and stylist
+          preference fit. Each gets 15 minutes to reply. Acceptance holds the
+          spot until you finish the booking in Square. The quick demo uses 20
+          seconds.
+        </p>
+        <p class="fine">
+          Offers go out between 9 am and 7 pm, leaving at least 30 minutes to
+          reach the salon.
+        </p>
+      </details>
       <footer>
         <span>Juniper Salon · built around Lena & Carla's front desk</span
-        ><span>Powered by Temporal · local only</span>
+        ><span id="connection" class="connection">Connecting…</span
+        ><a href="http://localhost:8233" target="_blank" rel="noreferrer"
+          >Technical history ↗</a
+        >
       </footer>
     </main>
     <dialog id="client-dialog" aria-labelledby="profile-name">

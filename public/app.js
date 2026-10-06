@@ -158,32 +158,8 @@ function render() {
   if (state.opening)
     $("appointment-detail").textContent =
       `${dateTime(state.opening.startsAt)} · ${state.opening.minutes} min · ${state.opening.mode === "demo" ? "Simulated date / 20-second offers" : "15-minute offers"}`;
-  for (const [id, phases] of Object.entries({
-    "step-match": ["searching"],
-    "step-offer": ["offering"],
-    "step-hold": ["held"],
-    "step-book": ["booked"],
-  }))
-    $(id).className = phases.includes(state.phase) ? "current" : "";
-  $("next-action").textContent = {
-    idle: "Ready for an opening.",
-    searching: "Finding the next eligible client…",
-    offering: active
-      ? `${active.name} ${active.status === "sending" ? "is receiving a simulated offer." : "has the exclusive offer. The next client is contacted automatically if they decline or the deadline passes."}`
-      : "Moving to the next person…",
-    held: `${active?.name || "The client"} accepted. This is a hold, not a confirmed booking.\nUpdate Square, then record the booking below.`,
-    booked:
-      "Booking recorded by staff. The opening is closed and outreach has stopped.",
-    withdrawn:
-      "This opening was withdrawn. Pending offers are canceled; later acceptance is blocked.",
-    unfilled:
-      "This opening remains unfilled. Check the journal and decide whether to contact someone manually.",
-  }[state.phase];
   $("hold-controls").hidden = state.phase !== "held";
   $("withdraw").hidden = !["searching", "offering", "held"].includes(
-    state.phase,
-  );
-  $("new-opening").hidden = ["idle", "searching", "offering", "held"].includes(
     state.phase,
   );
   renderOverview();
@@ -348,12 +324,6 @@ $("release").onclick = () =>
   send({ type: "release", offerId: heldId(), text: $("staff-note").value });
 $("withdraw").onclick = () =>
   send({ type: "withdraw", text: "Opening withdrawn by staff." });
-$("new-opening").onclick = () => {
-  creating = true;
-  manualSelection = false;
-  render();
-  $("start-form").scrollIntoView({ behavior: "smooth", block: "center" });
-};
 $("mode").onchange = () => {
   $("startsAt").value = localInput(
     $("mode").value === "demo"
@@ -392,7 +362,7 @@ function contactStatus(c) {
       sending: "Sending offer",
       offered: "Waiting for reply",
       held: "Accepted · update Square",
-      booked: "Booked for latest opening",
+      booked: "Booked",
       declined: "Declined this opening",
       expired: "No reply before deadline",
       failed: "Message not delivered",
@@ -433,13 +403,13 @@ function renderWaitlist() {
         (filter === "booked" && clientOffer(c)?.status === "booked"),
     );
   $("list-context").textContent =
-    `${clients.length} of ${state.clients.length} clients shown · Signup order, oldest first. ${state.opening ? "Contact history is for the latest opening." : "No clients have been contacted yet."}`;
+    `${clients.length} clients${$("client-filter").value !== "all" || query ? " shown" : ""}${state.opening ? " · Status for the latest opening" : " · Nobody contacted yet"}`;
   $("clients").innerHTML = clients.length
     ? clients
         .map((c) => {
-          const o = clientOffer(c),
-            sent = contactTime(c);
-          return `<button type="button" class="client-row profile-link" data-client="${esc(c.id)}" aria-label="View ${esc(c.name)} contact details"><span class="queue-number" title="Signup order">${c.joined}</span><span class="client-identity"><strong>${esc(c.name)}</strong><small>${esc(c.service)} · ${c.minutes} min · ${c.stylist === "Any" ? "Any stylist" : esc(c.stylist) + " preferred"}</small><small>Joined ${esc(time(c.joinedAt, { month: "short", day: "numeric" }))}</small></span><span class="client-progress"><span class="client-status ${["offered", "held", "booked"].includes(o?.status) ? "live" : ""}">${esc(contactStatus(c))}</span><small>${esc(o ? (sent ? "Last text: " + dateTime(sent) : "No delivered text") : fitReason(c))}</small><span class="details-link">View details →</span></span></button>`;
+          const o = clientOffer(c);
+          const reason = !o && c.reason && !creating ? fitReason(c) : "";
+          return `<button type="button" class="client-row profile-link" data-client="${esc(c.id)}" aria-label="View ${esc(c.name)} contact details"><span class="queue-number" title="Signup order">${c.joined}</span><span class="client-identity"><strong>${esc(c.name)}</strong><small>${esc(c.service)} · ${c.minutes} min · ${c.stylist === "Any" ? "Any stylist" : esc(c.stylist) + " preferred"}</small></span><span class="client-progress"><span class="client-status ${["offered", "held", "booked"].includes(o?.status) ? "live" : ""}">${esc(contactStatus(c))}</span>${reason ? `<small>${esc(reason)}</small>` : ""}</span><span class="row-arrow" aria-hidden="true">›</span></button>`;
         })
         .join("")
     : '<p class="empty">No clients match this filter.</p>';
@@ -453,17 +423,9 @@ function renderOverview() {
   );
   const unresolved = state.questions.filter((q) => !q.resolved).length;
   $("count-waiting").textContent = state.clients.filter(clientWaiting).length;
-  $("count-offered").textContent = state.offers.filter((o) =>
-    ["sending", "offered"].includes(o.status),
-  ).length;
-  $("count-attention").textContent =
-    unresolved + state.offers.filter((o) => o.status === "held").length;
-  $("count-booked").textContent = state.offers.filter(
-    (o) => o.status === "booked",
-  ).length;
-  let title = "Choose the opening you want to fill",
+  let title = "Let’s fill an opening.",
     copy =
-      "Enter the canceled appointment below. We will offer it to matching clients in signup order.",
+      "Add the appointment below. We’ll contact matching clients one at a time.",
     button = "Set up an opening";
   let action = () => {
     if (state.phase !== "idle") creating = true;
@@ -472,9 +434,9 @@ function renderOverview() {
     $("opening-card").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   if (!creating && state.phase === "held") {
-    title = `${active.name} said yes. Finish the booking in Square.`;
+    title = `${active.name} accepted. Confirm the appointment.`;
     copy =
-      "The spot is held. Nobody else will receive an offer until you confirm or release it.";
+      "The spot is held for them. Update Square, then record the booking below.";
     button = "Confirm this booking";
     action = () => {
       $("staff-note").focus();
@@ -488,15 +450,16 @@ function renderOverview() {
       ? `Waiting for ${active.name} to reply`
       : "Finding the next client who fits";
     copy =
-      "You can carry on with the salon. A decline or missed deadline moves to the next matching client automatically.";
+      active?.status === "offered"
+        ? `They have until ${time(active.deadline, { second: "2-digit" })}. We’ll move to the next client if they decline or don’t reply.`
+        : "We’re contacting the next matching client.";
     button = "View current client";
     action = () => {
       if (active) openClient(active.clientId);
     };
   } else if (!creating && state.phase === "booked") {
-    title = "This opening is filled.";
-    copy =
-      "The booking is recorded. Add the next canceled appointment when you are ready.";
+    title = `${state.offers.find((o) => o.status === "booked")?.name || "Your client"} is booked.`;
+    copy = "All done here. Add another opening whenever you’re ready.";
     button = "Add another opening";
   } else if (
     !creating &&
@@ -522,20 +485,11 @@ function renderOverview() {
   $("desk-next-copy").textContent = copy;
   $("desk-next-button").textContent = button;
   $("desk-next-button").onclick = action;
-  $("overview-deadline").textContent =
-    active?.status === "offered"
-      ? `Offer ends at ${time(active.deadline, { second: "2-digit" })}`
-      : "No reply needed right now";
-  document
-    .querySelectorAll(".workflow-guide li")
-    .forEach((li, i) =>
-      li.classList.toggle(
-        "current",
-        (i === 0 && (creating || state.phase === "idle")) ||
-          (i === 1 && ["searching", "offering"].includes(state.phase)) ||
-          (i === 2 && ["held", "booked"].includes(state.phase)),
-      ),
-    );
+  $("desk-next-button").hidden = creating || state.phase === "idle";
+  $("desk-next-title").parentElement.parentElement.classList.toggle(
+    "needs-attention",
+    state.phase === "held" || unresolved > 0,
+  );
 }
 function openClient(id) {
   selectedClient = id;
@@ -578,15 +532,13 @@ function renderProfile() {
       $("simulator").scrollIntoView({ behavior: "smooth", block: "start" });
     };
 }
-document.querySelectorAll(".overview a")[0].onclick = () => {
+$("waiting-link").onclick = () => {
   $("client-filter").value = "waiting";
   $("client-search").value = "";
   renderWaitlist();
 };
-document.querySelectorAll(".overview a")[3].onclick = () => {
-  $("client-filter").value = "booked";
-  $("client-search").value = "";
-  renderWaitlist();
+$("help-link").onclick = () => {
+  $("how-it-works").open = true;
 };
 $("client-search").oninput = renderWaitlist;
 $("client-filter").onchange = renderWaitlist;

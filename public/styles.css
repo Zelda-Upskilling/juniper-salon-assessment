@@ -1112,3 +1112,313 @@ summary {
     top: -19px;
   }
 }
+
+/* A quiet front desk: one next step, two working areas, details on request. */
+main {
+  margin: 0 auto;
+  max-width: 1260px;
+  padding: 30px 40px 22px;
+}
+.masthead {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 24px;
+  margin-bottom: 12px;
+}
+.masthead .brand {
+  color: var(--ink);
+  font-size: 38px;
+}
+.masthead .brand span {
+  font-size: 8px;
+  letter-spacing: 2px;
+  margin-top: 5px;
+}
+.masthead nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.masthead nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+}
+.masthead nav a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+#count-waiting {
+  color: var(--ink);
+  font-weight: 700;
+}
+.demo-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+.next-step-banner {
+  background: transparent;
+  border: 0;
+  padding: 35px 0 30px;
+  border-radius: 0;
+  gap: 25px;
+}
+.next-step-banner h1 {
+  font-size: 34px;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+  margin: 0 0 12px;
+}
+.next-step-banner p {
+  max-width: 660px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.next-step-banner button {
+  font-size: 13px;
+}
+.workspace {
+  gap: 24px;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.6fr);
+}
+.card {
+  border: 1px solid #e2e2d8;
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 26px;
+}
+.section-heading {
+  gap: 12px;
+  align-items: start;
+}
+.section-heading h2 {
+  font-size: 25px;
+}
+.section-heading .pill {
+  font-size: 10px;
+  padding: 4px 8px;
+  max-width: 105px;
+  text-align: center;
+}
+#opening-card .section-heading {
+  flex-wrap: wrap;
+}
+.appointment-detail {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.waitlist-explainer {
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.waitlist-tools {
+  gap: 8px;
+}
+.filter-label {
+  width: 135px;
+}
+.waitlist-tools input,
+.waitlist-tools select {
+  font-size: 12px;
+  padding: 10px 11px;
+}
+#list-context {
+  font-size: 10px;
+  margin: 12px 0 4px;
+}
+.client-row.profile-link {
+  grid-template-columns: 20px minmax(0, 1fr) minmax(100px, 0.8fr) 9px;
+  gap: 10px;
+  padding: 20px 0;
+}
+.queue-number {
+  border: 0;
+  background: transparent;
+  width: 18px;
+  height: auto;
+  font-size: 11px;
+}
+.client-identity strong {
+  text-decoration: none;
+  font-size: 14px;
+}
+.client-identity small,
+.client-progress small {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.client-status {
+  font-size: 11px;
+}
+.client-status.live {
+  background: transparent;
+  padding: 0;
+  color: #41683b;
+  font-weight: 600;
+}
+.row-arrow {
+  color: #83907c;
+  font:
+    20px Georgia,
+    serif;
+}
+.client-column {
+  grid-column: 1 / -1;
+}
+.simulator,
+.quiet-details {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  margin-top: 0;
+}
+.simulator > summary,
+.quiet-details > summary {
+  padding: 18px 0;
+  font-size: 13px;
+  font-weight: 400;
+}
+.simulator > summary span,
+.quiet-details > summary span {
+  color: var(--muted);
+  font-size: 11px;
+  margin-left: 12px;
+  font-weight: 400;
+}
+.quiet-details[open] {
+  padding-bottom: 18px;
+}
+.quiet-details .workflow-guide {
+  margin-top: 10px;
+}
+footer {
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 10px;
+}
+footer .connection {
+  background: none;
+  padding: 0;
+  font-size: 10px;
+  max-width: none;
+}
+footer .connection.offline {
+  color: var(--rust);
+  font-weight: 600;
+}
+@media (max-width: 1000px) {
+  main {
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .workspace {
+    grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.4fr);
+  }
+  .card {
+    padding: 20px;
+  }
+  .waitlist-tools {
+    flex-direction: column;
+  }
+  .filter-label {
+    width: 100%;
+  }
+  .client-row.profile-link {
+    grid-template-columns: 18px minmax(0, 1fr) 9px;
+    gap: 8px;
+  }
+  .client-progress {
+    grid-column: 2;
+    text-align: left;
+  }
+  .row-arrow {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 740px) {
+  main {
+    margin: 0;
+    padding: 22px 18px;
+  }
+  .masthead {
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+  }
+  .masthead .brand {
+    font-size: 33px;
+  }
+  .masthead .brand span {
+    font-size: 7px;
+  }
+  .masthead nav {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .masthead nav a {
+    font-size: 12px;
+  }
+  .next-step-banner {
+    display: block;
+    padding: 30px 0;
+  }
+  .next-step-banner h1 {
+    font-size: 30px;
+  }
+  .next-step-banner p {
+    font-size: 13px;
+  }
+  .next-step-banner button {
+    margin-top: 20px;
+  }
+  .workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .staff-column {
+    display: contents;
+  }
+  .opening-card,
+  #questions,
+  #waitlist,
+  .client-column {
+    width: 100%;
+  }
+  #waitlist {
+    order: 2;
+  }
+  .client-column {
+    order: 3;
+  }
+  .waitlist-tools {
+    flex-direction: row;
+  }
+  .filter-label {
+    width: 125px;
+  }
+  .client-row.profile-link {
+    padding: 15px 0;
+  }
+  .simulator > summary span,
+  .quiet-details > summary span {
+    display: block;
+    margin: 5px 0 0 15px;
+  }
+  .workflow-guide {
+    grid-template-columns: 1fr;
+  }
+  footer {
+    justify-content: flex-start;
+  }
+}

@@ -4,7 +4,7 @@ A local prototype built from a 15-turn conversation with Lena. It gives the earl
 
 **Public, independent assessment repository. The application is not deployed. All clients and texts are simulated.**
 
-![Staff overview and client waitlist](evidence/prototype-overview.jpg)
+![Staff overview and client waitlist](evidence/prototype-calm-overview.png)
 
 ## Run with one command
 
@@ -22,7 +22,7 @@ Press Ctrl-C to stop the API and Worker. `npm run stop` stops the local Temporal
 
 ## A two-minute walkthrough
 
-1. Read the overview: waiting clients, unanswered offers, staff attention, and bookings for the current opening. Click a client name to inspect their phone number, signup date, appointment, preferences, and contact history.
+1. Read the single next step at the top. The header shows how many clients are waiting; the two main areas show the appointment and client list. Click a client name for their phone number, signup date, appointment, last text, and booking history. Help, overall contact history, and demo controls stay collapsed until needed.
 2. Enter the canceled appointment in **Add a canceled appointment**. The waitlist is visible before outreach starts. Keep the prefilled June 10, 2030 date and **Quick demo · 20 seconds** under **Demo settings**. Click **Start offering this opening**.
 3. The next-step banner identifies the client with the offer. Click **View current client**, then **Open this client’s demo conversation**. Ask a question or click **Yes, hold this spot**. The simulator also opens from **Test a client reply** below the waitlist.
 4. Acceptance changes the banner to **Confirm this booking**. Enter a note such as `Square update simulated by Carla`, check the Square-update confirmation, and click **Record booking**. The client profile now shows when staff recorded the booking and the new appointment time.
@@ -31,7 +31,7 @@ Press Ctrl-C to stop the API and Worker. `npm run stop` stops the local Temporal
 
 The waitlist is sorted by signup order. Search and filters let staff find clients who are still waiting, already contacted, or booked for this opening. A mismatch explains the actual reason, such as **Wants Carla · this slot is with Lena**. The waiting count includes clients without texting permission, whose rows clearly say **Do not contact**.
 
-To repeat while an offer or hold is active, **Withdraw opening**, then **Set up another opening**. A client opting out stays opted out in this durable desk across future openings. Opt-out does not cancel a held or booked appointment.
+To repeat while an offer or hold is active, **Withdraw opening**, then **Add another opening**. A client opting out stays opted out in this durable desk across future openings. Opt-out does not cancel a held or booked appointment.
 
 **Standard mode** uses real time and 15-minute offers. Both modes enforce 9 am–7 pm contact hours and an offer deadline at least 30 minutes before the appointment. Quick demo uses a simulated 10 am salon clock and 20-second timers; no accelerated result represents a real business improvement. Los Angeles is the prototype timezone assumption, not a customer-confirmed salon location.
 
